@@ -1,0 +1,4 @@
+[20:40:01] [main/INFO]: [STDERR]: java.lang.NullPointerException: Cannot invoke "net.minecraft.client.renderer.texture.TextureAtlasSprite.getU(float)" because the return value of "net.minecraft.client.resources.model.geometry.BakedQuad$MaterialInfo.sprite()" is null
+[20:40:01] [main/INFO]: [STDERR]: 	at net.minecraft.client.resources.model.cuboid.FaceBakery.bakeVertex(FaceBakery.java:122)
+[20:40:01] [main/INFO]: [STDERR]: 	at net.minecraft.client.resources.model.cuboid.FaceBakery.bakeQuad(FaceBakery.java:72)
+[20:40:01] [main/INFO]: [STDERR]: 	at atom.dynamicwood.TestModel.main(TestModel.java:39)

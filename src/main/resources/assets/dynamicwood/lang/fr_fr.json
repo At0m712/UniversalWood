@@ -1,0 +1,12 @@
+{
+  "block.dynamicwood.crafting_table": "Table de craft",
+  "block.dynamicwood.bookshelf": "Bibliothèque",
+  "block.dynamicwood.ladder": "Échelle",
+  "item.dynamicwood.crafting_table": "Table de craft",
+  "item.dynamicwood.bookshelf": "Bibliothèque",
+  "item.dynamicwood.ladder": "Échelle",
+  "item.dynamicwood.crafting_table.typed": "Table de craft (%s)",
+  "item.dynamicwood.bookshelf.typed": "Bibliothèque (%s)",
+  "item.dynamicwood.ladder.typed": "Échelle (%s)",
+  "itemGroup.dynamicwood.dynamic_wood_tab": "Mobilier en bois dynamique"
+}

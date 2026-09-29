@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "dynamicwood:block/ladder" },
+    "facing=east":  { "model": "dynamicwood:block/ladder", "y": 90 },
+    "facing=south": { "model": "dynamicwood:block/ladder", "y": 180 },
+    "facing=west":  { "model": "dynamicwood:block/ladder", "y": 270 }
+  }
+}
