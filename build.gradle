@@ -112,4 +112,5 @@ publishing {
 
 			requires("fabric-api")
 		}
+	}
 }
