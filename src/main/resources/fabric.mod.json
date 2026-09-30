@@ -3,7 +3,7 @@
 	"id": "dynamicwood",
 	"version": "${version}",
 	"name": "DynamicWoodFurniture",
-	"description": "Dynamic Wood Furniture for Minecraft Fabric - Crafting Tables and Bookshelves adapting dynamically to any wood type.",
+	"description": "Dynamic Wood Furniture for Minecraft Fabric - Crafting Tables, Bookshelves and Ladders adapting dynamically to any wood type.",
 	"authors": [
 		"DynamicWood Team"
 	],
@@ -20,7 +20,7 @@
 	},
 	"depends": {
 		"fabricloader": ">=0.19.5",
-		"minecraft": "~26.1",
+		"minecraft": "~26.1.2",
 		"java": ">=25",
 		"fabric-api": "*"
 	}
