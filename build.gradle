@@ -80,7 +80,7 @@ publishing {
 		file = jar.archiveFile
 		changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
 		type = STABLE
-		version = project.mod_version
+		version = project.version
 		modLoaders.add("fabric")
 		modLoaders.add("quilt")
 
@@ -96,12 +96,12 @@ publishing {
 			}
 
 			client = true
-			server = true
+			server = false
 			requires("fabric-api")
 		}
 
 		modrinth {
-			displayName = "${project.name} ${project.mod_version}"
+			displayName = "${project.name} ${project.version}"
 			projectId = project.modrinth_id
 			accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
