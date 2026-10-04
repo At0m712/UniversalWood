@@ -22,7 +22,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 public class DynamicLadderBlock extends LadderBlock implements EntityBlock {
-    public static final MapCodec<DynamicLadderBlock> CODEC = simpleCodec(DynamicLadderBlock::new);
 
     public DynamicLadderBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -40,12 +39,6 @@ public class DynamicLadderBlock extends LadderBlock implements EntityBlock {
             path = path.substring(6);
         }
         return woodId.getNamespace().equals("minecraft") && path.equals("oak_planks");
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public MapCodec<LadderBlock> codec() {
-        return (MapCodec<LadderBlock>) (MapCodec<?>) CODEC;
     }
 
     @Override

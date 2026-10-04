@@ -33,16 +33,10 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 public class DynamicCraftingTableBlock extends CraftingTableBlock implements EntityBlock {
-    public static final MapCodec<DynamicCraftingTableBlock> CODEC = simpleCodec(DynamicCraftingTableBlock::new);
     private static final Component CONTAINER_TITLE = Component.translatable("container.crafting");
 
     public DynamicCraftingTableBlock(BlockBehaviour.Properties properties) {
         super(properties);
-    }
-
-    @Override
-    public MapCodec<? extends CraftingTableBlock> codec() {
-        return CODEC;
     }
 
     @Override

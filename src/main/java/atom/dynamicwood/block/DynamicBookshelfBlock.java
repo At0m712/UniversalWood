@@ -25,15 +25,9 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 public class DynamicBookshelfBlock extends Block implements EntityBlock {
-    public static final MapCodec<DynamicBookshelfBlock> CODEC = simpleCodec(DynamicBookshelfBlock::new);
 
     public DynamicBookshelfBlock(BlockBehaviour.Properties properties) {
         super(properties);
-    }
-
-    @Override
-    public MapCodec<? extends DynamicBookshelfBlock> codec() {
-        return CODEC;
     }
 
     @Override

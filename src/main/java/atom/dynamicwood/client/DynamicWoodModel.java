@@ -37,6 +37,7 @@ import net.minecraft.client.resources.model.cuboid.CuboidFace;
 import net.minecraft.client.resources.model.cuboid.FaceBakery;
 import net.minecraft.client.resources.model.cuboid.ItemTransform;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.ItemQuads;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -226,6 +227,19 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
         };
     }
 
+    private static BakedQuad.MaterialInfo createMaterialInfo(TextureAtlasSprite sprite, ChunkSectionLayer layer) {
+        return new BakedQuad.MaterialInfo(
+                sprite,
+                layer,
+                Sheets.cutoutBlockItemSheet(),
+                Sheets.cutoutBlockItemGlintSheet(),
+                Sheets.cutoutBlockItemGlintSpecialSheet(),
+                -1,
+                null,
+                0
+        );
+    }
+
     private CachedModelData buildLadderModelData(Identifier woodId, Direction facing) {
         ModelBaker.Interner interner = new ModelBaker.Interner() {
             @Override
@@ -257,14 +271,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
             }
             Material.Baked particleMat = new Material.Baked(ladderSprite, false);
 
-            BakedQuad.MaterialInfo matInfo = new BakedQuad.MaterialInfo(
-                    ladderSprite,
-                    ChunkSectionLayer.CUTOUT,
-                    Sheets.cutoutBlockItemSheet(),
-                    -1,
-                    true,
-                    0
-            );
+            BakedQuad.MaterialInfo matInfo = createMaterialInfo(ladderSprite, ChunkSectionLayer.CUTOUT);
 
             Vector3f from = new Vector3f(0, 0, 15.2f);
             Vector3f to = new Vector3f(16, 16, 15.2f);
@@ -290,14 +297,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
         TextureAtlasSprite plankSprite = resolvePlankSprite(woodId);
         Material.Baked particleMat = new Material.Baked(plankSprite, false);
 
-        BakedQuad.MaterialInfo matInfo = new BakedQuad.MaterialInfo(
-                plankSprite,
-                ChunkSectionLayer.CUTOUT,
-                Sheets.cutoutBlockItemSheet(),
-                -1,
-                true,
-                0
-        );
+        BakedQuad.MaterialInfo matInfo = createMaterialInfo(plankSprite, ChunkSectionLayer.CUTOUT);
 
         // 1. Left Vertical Rail (x in [2, 4], y in [0, 16])
         Vector3f railLeftFrom = new Vector3f(2, 0, 15.2f);
@@ -520,14 +520,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
                 Vector3f from = new Vector3f(0, 0, 0);
                 Vector3f to = new Vector3f(16, 16, 16);
 
-                BakedQuad.MaterialInfo matInfo = new BakedQuad.MaterialInfo(
-                        plankSprite,
-                        ChunkSectionLayer.SOLID,
-                        Sheets.cutoutBlockItemSheet(),
-                        -1,
-                        true,
-                        0
-                );
+                BakedQuad.MaterialInfo matInfo = createMaterialInfo(plankSprite, ChunkSectionLayer.SOLID);
 
                 BakedQuad quad = FaceBakery.bakeQuad(
                         interner,
@@ -557,14 +550,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
                 }
 
                 // Layer 1: Background Wood Plank (Solid)
-                BakedQuad.MaterialInfo baseMatInfo = new BakedQuad.MaterialInfo(
-                        plankSprite,
-                        ChunkSectionLayer.SOLID,
-                        Sheets.cutoutBlockItemSheet(),
-                        -1,
-                        true,
-                        0
-                );
+                BakedQuad.MaterialInfo baseMatInfo = createMaterialInfo(plankSprite, ChunkSectionLayer.SOLID);
 
                 BakedQuad baseQuad = FaceBakery.bakeQuad(
                         interner,
@@ -585,14 +571,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
                 Vector3f overlayFrom = new Vector3f(0, 0, 0);
                 Vector3f overlayTo = new Vector3f(16, 16, 16);
 
-                BakedQuad.MaterialInfo overlayMatInfo = new BakedQuad.MaterialInfo(
-                        overlaySprite,
-                        ChunkSectionLayer.CUTOUT,
-                        Sheets.cutoutBlockItemSheet(),
-                        -1,
-                        true,
-                        0
-                );
+                BakedQuad.MaterialInfo overlayMatInfo = createMaterialInfo(overlaySprite, ChunkSectionLayer.CUTOUT);
 
                 BakedQuad overlayQuad = FaceBakery.bakeQuad(
                         interner,
@@ -676,14 +655,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
             Vector3f from = new Vector3f(0, 0, 0);
             Vector3f to = new Vector3f(16, 16, 16);
 
-            BakedQuad.MaterialInfo matInfo = new BakedQuad.MaterialInfo(
-                    faceSprite,
-                    ChunkSectionLayer.SOLID,
-                    Sheets.cutoutBlockItemSheet(),
-                    -1,
-                    true,
-                    0
-            );
+            BakedQuad.MaterialInfo matInfo = createMaterialInfo(faceSprite, ChunkSectionLayer.SOLID);
 
             BakedQuad quad = FaceBakery.bakeQuad(
                     interner,
@@ -975,8 +947,7 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
 
         layer.setParticleMaterial(data.particleMaterial());
 
-        List<BakedQuad> quadList = layer.prepareQuadList();
-        quadList.addAll(data.itemQuads());
+        layer.setQuads(ItemQuads.split(data.itemQuads()));
     }
 
     // --- Inner BlockStateModelPart ---
