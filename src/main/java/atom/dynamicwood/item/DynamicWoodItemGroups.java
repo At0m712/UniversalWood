@@ -22,6 +22,7 @@ import java.util.Set;
 
 public final class DynamicWoodItemGroups {
     public static final TagKey<Item> C_WOODEN_PLANKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "wooden_planks"));
+    public static final TagKey<Item> C_PLANKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "planks"));
 
     public static final CreativeModeTab DYNAMIC_WOOD_TAB = Registry.register(
             BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -43,6 +44,12 @@ public final class DynamicWoodItemGroups {
                         }
 
                         for (Holder<Item> holder : BuiltInRegistries.ITEM.getTagOrEmpty(C_WOODEN_PLANKS)) {
+                            Identifier id = holder.unwrapKey().map(ResourceKey::identifier)
+                                    .orElseGet(() -> BuiltInRegistries.ITEM.getKey(holder.value()));
+                            plankIds.add(id);
+                        }
+
+                        for (Holder<Item> holder : BuiltInRegistries.ITEM.getTagOrEmpty(C_PLANKS)) {
                             Identifier id = holder.unwrapKey().map(ResourceKey::identifier)
                                     .orElseGet(() -> BuiltInRegistries.ITEM.getKey(holder.value()));
                             plankIds.add(id);
