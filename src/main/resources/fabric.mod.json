@@ -2,11 +2,16 @@
 	"schemaVersion": 1,
 	"id": "dynamicwood",
 	"version": "${version}",
-	"name": "DynamicWoodFurniture",
-	"description": "Dynamic Wood Furniture for Minecraft Fabric - Crafting Tables, Bookshelves and Ladders adapting dynamically to any wood type.",
+	"name": "Universal Wood",
+	"description": "Universal Wood - Crafting Tables, Bookshelves, and Ladders adapting dynamically to any wood type.",
 	"authors": [
-		"DynamicWood Team"
+		"At0m712"
 	],
+	"contact": {
+		"homepage": "https://github.com/At0m712/UniversalWood",
+		"sources": "https://github.com/At0m712/UniversalWood",
+		"issues": "https://github.com/At0m712/UniversalWood/issues"
+	},
 	"license": "MIT",
 	"icon": "assets/variants/icon.png",
 	"environment": "*",

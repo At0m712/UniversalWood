@@ -19,8 +19,16 @@ public class DynamicWoodBlockItem extends BlockItem {
         Identifier woodId = stack.get(ModDataComponents.WOOD_TYPE);
         if (woodId != null) {
             Item plankItem = BuiltInRegistries.ITEM.getOptional(woodId).orElse(null);
+            if (plankItem == null && woodId.getPath().startsWith("block/")) {
+                Identifier itemId = Identifier.fromNamespaceAndPath(woodId.getNamespace(), woodId.getPath().substring(6));
+                plankItem = BuiltInRegistries.ITEM.getOptional(itemId).orElse(null);
+            }
             if (plankItem != null) {
                 return Component.translatable(this.getDescriptionId() + ".typed", plankItem.getName(new ItemStack(plankItem)));
+            }
+            Block plankBlock = BuiltInRegistries.BLOCK.getOptional(woodId).orElse(null);
+            if (plankBlock != null) {
+                return Component.translatable(this.getDescriptionId() + ".typed", plankBlock.getName());
             }
         }
         return super.getName(stack);
