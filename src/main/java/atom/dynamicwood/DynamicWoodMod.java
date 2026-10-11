@@ -116,7 +116,7 @@ public class DynamicWoodMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("[DynamicWoodFurniture] Initializing common components and registrations...");
+        LOGGER.info("[UniversalWood] Initializing common components and registrations...");
         ModDataComponents.initialize();
         DynamicWoodItemGroups.initialize();
 
@@ -126,6 +126,10 @@ public class DynamicWoodMod implements ModInitializer {
                 DynamicWoodCraftingRecipe.SERIALIZER
         );
 
-        LOGGER.info("[DynamicWoodFurniture] Successfully initialized!");
+        net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(CRAFTING_TABLE, 5, 20);
+        net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(BOOKSHELF, 30, 20);
+        net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(LADDER, 15, 60);
+
+        LOGGER.info("[UniversalWood] Successfully initialized!");
     }
 }

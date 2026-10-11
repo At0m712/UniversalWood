@@ -26,7 +26,7 @@ public class DynamicWoodClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        DynamicWoodMod.LOGGER.info("[DynamicWoodFurniture] Initializing client renderer and model loading plugins...");
+        DynamicWoodMod.LOGGER.info("[UniversalWood] Initializing client renderer and model loading plugins...");
 
         ModelLoadingPlugin.register(pluginContext -> {
             pluginContext.modifyBlockModelAfterBake().register((model, context) -> {
@@ -71,6 +71,6 @@ public class DynamicWoodClient implements ClientModInitializer {
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new DynamicWoodReloadListener());
 
-        DynamicWoodMod.LOGGER.info("[DynamicWoodFurniture] Client initialization complete!");
+        DynamicWoodMod.LOGGER.info("[UniversalWood] Client initialization complete!");
     }
 }
