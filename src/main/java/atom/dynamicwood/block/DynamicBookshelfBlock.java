@@ -1,6 +1,8 @@
 package atom.dynamicwood.block;
 
+import atom.dynamicwood.DynamicWoodMod;
 import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.properties.DynamicWoodProperties;
 import atom.dynamicwood.component.ModDataComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
@@ -9,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
@@ -18,6 +21,7 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.jspecify.annotations.Nullable;
@@ -29,6 +33,23 @@ public class DynamicBookshelfBlock extends Block implements EntityBlock {
 
     public DynamicBookshelfBlock(BlockBehaviour.Properties properties) {
         super(properties);
+        registerDefaultState(defaultBlockState().setValue(DynamicWoodProperties.FIREPROOF, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+        builder.add(DynamicWoodProperties.FIREPROOF);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        if (state != null) {
+            Identifier woodId = context.getItemInHand().get(ModDataComponents.WOOD_TYPE);
+            state = state.setValue(DynamicWoodProperties.FIREPROOF, DynamicWoodMod.isFireproofWood(woodId));
+        }
+        return state;
     }
 
     @Override

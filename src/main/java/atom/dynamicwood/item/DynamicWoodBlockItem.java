@@ -1,17 +1,37 @@
 package atom.dynamicwood.item;
 
+import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
 import atom.dynamicwood.component.ModDataComponents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class DynamicWoodBlockItem extends BlockItem {
     public DynamicWoodBlockItem(Block block, Properties properties) {
         super(block, properties);
+    }
+
+    @Override
+    protected boolean placeBlock(BlockPlaceContext context, BlockState state) {
+        boolean placed = super.placeBlock(context, state);
+        if (placed) {
+            Level level = context.getLevel();
+            BlockPos pos = context.getClickedPos();
+            ItemStack stack = context.getItemInHand();
+            Identifier woodId = stack.get(ModDataComponents.WOOD_TYPE);
+            if (woodId != null && level.getBlockEntity(pos) instanceof DynamicWoodBlockEntity be) {
+                be.setWoodType(woodId);
+            }
+        }
+        return placed;
     }
 
     @Override
