@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,6 +114,25 @@ public class DynamicWoodMod implements ModInitializer {
             Identifier.fromNamespaceAndPath(MOD_ID, "dynamic_wood"),
             FabricBlockEntityTypeBuilder.create(DynamicWoodBlockEntity::new, CRAFTING_TABLE, BOOKSHELF, LADDER).build()
     );
+
+    public static boolean isFireproofWood(@Nullable Identifier woodId) {
+        if (woodId == null) {
+            return false;
+        }
+        String path = woodId.getPath();
+        if (path.startsWith("block/")) {
+            path = path.substring(6);
+        }
+        if (path.contains("crimson") || path.contains("warped") || path.contains("nether") || woodId.getNamespace().contains("nether")) {
+            return true;
+        }
+        Identifier blockId = Identifier.fromNamespaceAndPath(woodId.getNamespace(), path);
+        Block block = BuiltInRegistries.BLOCK.getOptional(blockId).orElse(null);
+        if (block != null) {
+            return !block.defaultBlockState().ignitedByLava();
+        }
+        return false;
+    }
 
     @Override
     public void onInitialize() {
