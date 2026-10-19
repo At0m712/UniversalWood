@@ -907,6 +907,16 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
             }
         }
 
+        if (pos != null && (woodId == null || woodId.equals(DynamicWoodBlockEntity.DEFAULT_WOOD))) {
+            Minecraft client = Minecraft.getInstance();
+            if (client != null && client.level != null) {
+                BlockEntity be = client.level.getBlockEntity(pos);
+                if (be instanceof DynamicWoodBlockEntity dynamicBe) {
+                    woodId = dynamicBe.getWoodType();
+                }
+            }
+        }
+
         Direction facing = (blockFacing != null) ? blockFacing : Direction.NORTH;
         if (furnitureType == FurnitureType.LADDER && state != null && state.hasProperty(LadderBlock.FACING)) {
             facing = state.getValue(LadderBlock.FACING);

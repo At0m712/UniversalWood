@@ -1,6 +1,4 @@
-# Universal Wood 1.0.1-26.1
+# Universal Wood 1.0.2-26.1
 
-- Added flammability for all blocks (crafting tables, bookshelves, ladders)
-- Added conventional tags (c:crafting_tables, c:bookshelves, c:ladders)
-- Improved dynamic wood variant naming for items
-- Added c:planks support in creative tab
+- Fixed Nether wood types (crimson, warped) being flammable; they are now properly fireproof as in vanilla
+- Fixed block placement animation compatibility (e.g. with "A Good Place" mod/resource packs) where blocks previously showed default oak during placement

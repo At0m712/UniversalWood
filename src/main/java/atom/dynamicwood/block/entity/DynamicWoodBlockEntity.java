@@ -1,6 +1,7 @@
 package atom.dynamicwood.block.entity;
 
 import atom.dynamicwood.DynamicWoodMod;
+import atom.dynamicwood.block.properties.DynamicWoodProperties;
 import atom.dynamicwood.component.ModDataComponents;
 import net.fabricmc.fabric.api.blockgetter.v2.RenderDataBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -30,10 +31,21 @@ public class DynamicWoodBlockEntity extends BlockEntity implements RenderDataBlo
         return woodType != null ? woodType : DEFAULT_WOOD;
     }
 
+    public boolean isFireproof() {
+        return DynamicWoodMod.isFireproofWood(getWoodType());
+    }
+
     public void setWoodType(Identifier woodType) {
         this.woodType = (woodType != null) ? woodType : DEFAULT_WOOD;
         setChanged();
         if (level != null) {
+            BlockState currentState = getBlockState();
+            if (currentState.hasProperty(DynamicWoodProperties.FIREPROOF)) {
+                boolean fireproof = isFireproof();
+                if (currentState.getValue(DynamicWoodProperties.FIREPROOF) != fireproof) {
+                    level.setBlock(worldPosition, currentState.setValue(DynamicWoodProperties.FIREPROOF, fireproof), Block.UPDATE_ALL);
+                }
+            }
             if (!level.isClientSide()) {
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
             } else {
@@ -52,6 +64,15 @@ public class DynamicWoodBlockEntity extends BlockEntity implements RenderDataBlo
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.woodType = input.read("wood_type", Identifier.CODEC).orElse(DEFAULT_WOOD);
+        if (level != null && !level.isClientSide()) {
+            BlockState currentState = getBlockState();
+            if (currentState.hasProperty(DynamicWoodProperties.FIREPROOF)) {
+                boolean fireproof = isFireproof();
+                if (currentState.getValue(DynamicWoodProperties.FIREPROOF) != fireproof) {
+                    level.setBlock(worldPosition, currentState.setValue(DynamicWoodProperties.FIREPROOF, fireproof), Block.UPDATE_ALL);
+                }
+            }
+        }
         if (level != null && level.isClientSide()) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }
