@@ -29,8 +29,8 @@ public class DynamicWoodCraftingRecipe extends CustomRecipe {
     public static final TagKey<Item> C_WOOD_STICKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "wood_sticks"));
 
     public static final RecipeSerializer<DynamicWoodCraftingRecipe> SERIALIZER = new RecipeSerializer<>(
-            MapCodec.unit(new DynamicWoodCraftingRecipe()),
-            StreamCodec.unit(new DynamicWoodCraftingRecipe())
+            MapCodec.unit(DynamicWoodCraftingRecipe::new),
+            StreamCodec.of((buf, recipe) -> {}, buf -> new DynamicWoodCraftingRecipe())
     );
 
     public DynamicWoodCraftingRecipe() {
