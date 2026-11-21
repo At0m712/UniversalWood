@@ -1,6 +1,6 @@
 package atom.dynamicwood.item;
 
-import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.entity.DynamicWoodHolder;
 import atom.dynamicwood.component.ModDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,8 +27,8 @@ public class DynamicWoodBlockItem extends BlockItem {
             BlockPos pos = context.getClickedPos();
             ItemStack stack = context.getItemInHand();
             Identifier woodId = stack.get(ModDataComponents.WOOD_TYPE);
-            if (woodId != null && level.getBlockEntity(pos) instanceof DynamicWoodBlockEntity be) {
-                be.setWoodType(woodId);
+            if (woodId != null && level.getBlockEntity(pos) instanceof DynamicWoodHolder holder) {
+                holder.setWoodType(woodId);
             }
         }
         return placed;

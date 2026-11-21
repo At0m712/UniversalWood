@@ -2,6 +2,8 @@
   "values": [
     "dynamicwood:crafting_table",
     "dynamicwood:bookshelf",
-    "dynamicwood:ladder"
+    "dynamicwood:ladder",
+    "dynamicwood:chest",
+    "dynamicwood:beehive"
   ]
 }

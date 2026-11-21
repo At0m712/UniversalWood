@@ -2,11 +2,17 @@
   "block.dynamicwood.crafting_table": "Crafting Table",
   "block.dynamicwood.bookshelf": "Bookshelf",
   "block.dynamicwood.ladder": "Ladder",
+  "block.dynamicwood.chest": "Chest",
+  "block.dynamicwood.beehive": "Beehive",
   "item.dynamicwood.crafting_table": "Crafting Table",
   "item.dynamicwood.bookshelf": "Bookshelf",
   "item.dynamicwood.ladder": "Ladder",
+  "item.dynamicwood.chest": "Chest",
+  "item.dynamicwood.beehive": "Beehive",
   "item.dynamicwood.crafting_table.typed": "%s Crafting Table",
   "item.dynamicwood.bookshelf.typed": "%s Bookshelf",
   "item.dynamicwood.ladder.typed": "%s Ladder",
+  "item.dynamicwood.chest.typed": "%s Chest",
+  "item.dynamicwood.beehive.typed": "%s Beehive",
   "itemGroup.dynamicwood.dynamic_wood_tab": "Universal Wood"
 }
