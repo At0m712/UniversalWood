@@ -17,6 +17,8 @@ public class DynamicWoodReloadListener implements SimpleSynchronousResourceReloa
     public void onResourceManagerReload(ResourceManager resourceManager) {
         DynamicWoodMod.LOGGER.info("[DynamicWoodFurniture] Resource reload detected (F3+T or pack reload). Invalidation of dynamic wood model cache...");
         DynamicWoodModel.clearAllCaches();
+        WoodColorResolver.clearCache();
+        DynamicWoodClient.CHEST_ITEM_MODEL.clearCache();
         DynamicWoodMod.LOGGER.info("[DynamicWoodFurniture] Dynamic wood model cache successfully invalidated.");
     }
 }

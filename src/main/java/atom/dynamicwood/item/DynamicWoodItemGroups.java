@@ -72,6 +72,14 @@ public final class DynamicWoodItemGroups {
                                 ItemStack ladder = new ItemStack(DynamicWoodMod.LADDER_ITEM);
                                 ladder.set(ModDataComponents.WOOD_TYPE, woodId);
                                 output.accept(ladder);
+
+                                ItemStack chest = new ItemStack(DynamicWoodMod.CHEST_ITEM);
+                                chest.set(ModDataComponents.WOOD_TYPE, woodId);
+                                output.accept(chest);
+
+                                ItemStack beehive = new ItemStack(DynamicWoodMod.BEEHIVE_ITEM);
+                                beehive.set(ModDataComponents.WOOD_TYPE, woodId);
+                                output.accept(beehive);
                             }
                         }
                     })

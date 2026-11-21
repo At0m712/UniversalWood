@@ -2,11 +2,17 @@
   "block.dynamicwood.crafting_table": "Table de craft",
   "block.dynamicwood.bookshelf": "Bibliothèque",
   "block.dynamicwood.ladder": "Échelle",
+  "block.dynamicwood.chest": "Coffre",
+  "block.dynamicwood.beehive": "Ruche",
   "item.dynamicwood.crafting_table": "Table de craft",
   "item.dynamicwood.bookshelf": "Bibliothèque",
   "item.dynamicwood.ladder": "Échelle",
+  "item.dynamicwood.chest": "Coffre",
+  "item.dynamicwood.beehive": "Ruche",
   "item.dynamicwood.crafting_table.typed": "Table de craft (%s)",
   "item.dynamicwood.bookshelf.typed": "Bibliothèque (%s)",
   "item.dynamicwood.ladder.typed": "Échelle (%s)",
+  "item.dynamicwood.chest.typed": "Coffre (%s)",
+  "item.dynamicwood.beehive.typed": "Ruche (%s)",
   "itemGroup.dynamicwood.dynamic_wood_tab": "Universal Wood"
 }

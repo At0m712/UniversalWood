@@ -27,6 +27,7 @@ public class DynamicWoodCraftingRecipe extends CustomRecipe {
     public static final TagKey<Item> C_BOOKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "books"));
     public static final TagKey<Item> C_STICKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "sticks"));
     public static final TagKey<Item> C_WOOD_STICKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "wood_sticks"));
+    public static final TagKey<Item> C_HONEYCOMBS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "honeycombs"));
 
     public static final RecipeSerializer<DynamicWoodCraftingRecipe> SERIALIZER = new RecipeSerializer<>(
             MapCodec.unit(DynamicWoodCraftingRecipe::new),
@@ -63,9 +64,18 @@ public class DynamicWoodCraftingRecipe extends CustomRecipe {
         return stack.is(Items.STICK) || stack.is(C_STICKS) || stack.is(C_WOOD_STICKS);
     }
 
+    public static boolean isHoneycomb(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        return stack.is(Items.HONEYCOMB) || stack.is(C_HONEYCOMBS);
+    }
+
     @Override
     public boolean matches(CraftingInput input, Level level) {
-        return matchesCraftingTable(input) || matchesBookshelf(input) || matchesLadder(input);
+        return matchesCraftingTable(input)
+                || matchesBookshelf(input)
+                || matchesLadder(input)
+                || matchesChest(input)
+                || matchesBeehive(input);
     }
 
     @Override
@@ -118,6 +128,14 @@ public class DynamicWoodCraftingRecipe extends CustomRecipe {
 
         if (matchesLadder(input)) {
             return assembleLadder(input);
+        }
+
+        if (matchesChest(input)) {
+            return assembleChest(input);
+        }
+
+        if (matchesBeehive(input)) {
+            return assembleBeehive(input);
         }
 
         return ItemStack.EMPTY;
@@ -343,6 +361,134 @@ public class DynamicWoodCraftingRecipe extends CustomRecipe {
 
         // Pattern 3: All 7 are sticks
         return new ItemStack(Items.LADDER, 3);
+    }
+
+    private boolean matchesChest(CraftingInput input) {
+        if (input.width() < 3 || input.height() < 3) return false;
+
+        int nonAirCount = 0;
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+
+        for (int y = 0; y < input.height(); y++) {
+            for (int x = 0; x < input.width(); x++) {
+                ItemStack stack = input.getItem(x, y);
+                if (!stack.isEmpty()) {
+                    nonAirCount++;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (nonAirCount != 8) return false;
+        if (maxX - minX != 2 || maxY - minY != 2) return false;
+        if (!input.getItem(minX + 1, minY + 1).isEmpty()) return false;
+
+        for (int y = minY; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                if (x == minX + 1 && y == minY + 1) continue;
+                if (!isPlank(input.getItem(x, y))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private ItemStack assembleChest(CraftingInput input) {
+        List<ItemStack> planks = new ArrayList<>(8);
+        for (int y = 0; y < input.height(); y++) {
+            for (int x = 0; x < input.width(); x++) {
+                ItemStack stack = input.getItem(x, y);
+                if (!stack.isEmpty() && isPlank(stack)) {
+                    planks.add(stack);
+                }
+            }
+        }
+        if (planks.size() != 8) {
+            return ItemStack.EMPTY;
+        }
+        Item firstPlank = planks.get(0).getItem();
+        boolean homogeneous = true;
+        for (int i = 1; i < 8; i++) {
+            if (!planks.get(i).is(firstPlank)) {
+                homogeneous = false;
+                break;
+            }
+        }
+        if (homogeneous) {
+            Identifier woodId = BuiltInRegistries.ITEM.getKey(firstPlank);
+            if (isOak(woodId)) {
+                return new ItemStack(Items.CHEST);
+            }
+            ItemStack result = new ItemStack(DynamicWoodMod.CHEST_ITEM);
+            result.set(ModDataComponents.WOOD_TYPE, woodId);
+            return result;
+        }
+        return new ItemStack(Items.CHEST);
+    }
+
+    private boolean matchesBeehive(CraftingInput input) {
+        if (input.width() < 3 || input.height() < 3) return false;
+
+        int nonAirCount = 0;
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+
+        for (int y = 0; y < input.height(); y++) {
+            for (int x = 0; x < input.width(); x++) {
+                ItemStack stack = input.getItem(x, y);
+                if (!stack.isEmpty()) {
+                    nonAirCount++;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (nonAirCount != 9) return false;
+        if (maxX - minX != 2 || maxY - minY != 2) return false;
+
+        for (int x = minX; x <= maxX; x++) {
+            if (!isPlank(input.getItem(x, minY))) return false;
+        }
+        for (int x = minX; x <= maxX; x++) {
+            if (!isHoneycomb(input.getItem(x, minY + 1))) return false;
+        }
+        for (int x = minX; x <= maxX; x++) {
+            if (!isPlank(input.getItem(x, minY + 2))) return false;
+        }
+        return true;
+    }
+
+    private ItemStack assembleBeehive(CraftingInput input) {
+        List<ItemStack> planks = getBookshelfPlanks(input);
+        if (planks.size() != 6) {
+            return ItemStack.EMPTY;
+        }
+        Item firstPlank = planks.get(0).getItem();
+        boolean homogeneous = true;
+        for (int i = 1; i < 6; i++) {
+            if (!planks.get(i).is(firstPlank)) {
+                homogeneous = false;
+                break;
+            }
+        }
+        if (homogeneous) {
+            Identifier woodId = BuiltInRegistries.ITEM.getKey(firstPlank);
+            if (isOak(woodId)) {
+                return new ItemStack(Items.BEEHIVE);
+            }
+            ItemStack result = new ItemStack(DynamicWoodMod.BEEHIVE_ITEM);
+            result.set(ModDataComponents.WOOD_TYPE, woodId);
+            return result;
+        }
+        return new ItemStack(Items.BEEHIVE);
     }
 
     @Override
