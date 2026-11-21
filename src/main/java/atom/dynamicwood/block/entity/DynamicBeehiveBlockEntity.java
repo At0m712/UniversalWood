@@ -1,0 +1,129 @@
+package atom.dynamicwood.block.entity;
+
+import atom.dynamicwood.DynamicWoodMod;
+import atom.dynamicwood.block.properties.DynamicWoodProperties;
+import atom.dynamicwood.component.ModDataComponents;
+import net.fabricmc.fabric.api.blockgetter.v2.RenderDataBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentGetter;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+
+public class DynamicBeehiveBlockEntity extends BeehiveBlockEntity implements DynamicWoodHolder, RenderDataBlockEntity {
+    private Identifier woodType = DynamicWoodBlockEntity.DEFAULT_WOOD;
+
+    public DynamicBeehiveBlockEntity(BlockPos pos, BlockState state) {
+        super(pos, state);
+    }
+
+    @Override
+    public BlockEntityType<?> getType() {
+        return DynamicWoodMod.BEEHIVE_BLOCK_ENTITY_TYPE;
+    }
+
+    @Override
+    public boolean isValidBlockState(BlockState state) {
+        return DynamicWoodMod.BEEHIVE_BLOCK_ENTITY_TYPE.isValid(state);
+    }
+
+    @Override
+    public Identifier getWoodType() {
+        return woodType != null ? woodType : DynamicWoodBlockEntity.DEFAULT_WOOD;
+    }
+
+    @Override
+    public boolean isFireproof() {
+        return DynamicWoodMod.isFireproofWood(getWoodType());
+    }
+
+    @Override
+    public void setWoodType(Identifier woodType) {
+        this.woodType = (woodType != null) ? woodType : DynamicWoodBlockEntity.DEFAULT_WOOD;
+        setChanged();
+        if (level != null) {
+            BlockState currentState = getBlockState();
+            if (currentState.hasProperty(DynamicWoodProperties.FIREPROOF)) {
+                boolean fireproof = isFireproof();
+                if (currentState.getValue(DynamicWoodProperties.FIREPROOF) != fireproof) {
+                    level.setBlock(worldPosition, currentState.setValue(DynamicWoodProperties.FIREPROOF, fireproof), Block.UPDATE_ALL);
+                }
+            }
+            if (!level.isClientSide()) {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            } else {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+            }
+        }
+    }
+
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.store("wood_type", Identifier.CODEC, getWoodType());
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        this.woodType = input.read("wood_type", Identifier.CODEC).orElse(DynamicWoodBlockEntity.DEFAULT_WOOD);
+        if (level != null && !level.isClientSide()) {
+            BlockState currentState = getBlockState();
+            if (currentState.hasProperty(DynamicWoodProperties.FIREPROOF)) {
+                boolean fireproof = isFireproof();
+                if (currentState.getValue(DynamicWoodProperties.FIREPROOF) != fireproof) {
+                    level.setBlock(worldPosition, currentState.setValue(DynamicWoodProperties.FIREPROOF, fireproof), Block.UPDATE_ALL);
+                }
+            }
+        }
+        if (level != null && level.isClientSide()) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+        }
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveCustomOnly(registries);
+    }
+
+    @Override
+    protected void applyImplicitComponents(DataComponentGetter components) {
+        super.applyImplicitComponents(components);
+        Identifier wood = components.get(ModDataComponents.WOOD_TYPE);
+        if (wood != null) {
+            this.woodType = wood;
+        }
+    }
+
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder builder) {
+        super.collectImplicitComponents(builder);
+        builder.set(ModDataComponents.WOOD_TYPE, getWoodType());
+    }
+
+    @Override
+    public void removeComponentsFromTag(ValueOutput output) {
+        super.removeComponentsFromTag(output);
+        output.discard("wood_type");
+    }
+
+    @Override
+    public Object getRenderData() {
+        return getWoodType();
+    }
+}

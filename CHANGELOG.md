@@ -1,5 +1,5 @@
-# Universal Wood 1.0.2-26.1
+# Universal Wood 1.0.3-26.1
 
-- Fixed duplicate recipe registration crash on world load / server start
-- Fixed Nether wood types (crimson, warped) being flammable; they are now properly fireproof as in vanilla
-- Fixed block placement animation compatibility (e.g. with "A Good Place" mod/resource packs) where blocks previously showed default oak during placement
+- Added dynamic wood variants for Chests (single and double chests, with wood-tinted body and untinted iron latch)
+- Added dynamic wood variants for Beehives (with wood-tinted body, untinted honey overlay when full, and full bee/POI support)
+- Oak planks continue to craft the vanilla Chest and Beehive
