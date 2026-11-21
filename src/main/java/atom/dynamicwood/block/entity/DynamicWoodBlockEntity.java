@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-public class DynamicWoodBlockEntity extends BlockEntity implements RenderDataBlockEntity {
+public class DynamicWoodBlockEntity extends BlockEntity implements DynamicWoodHolder, RenderDataBlockEntity {
     public static final Identifier DEFAULT_WOOD = Identifier.fromNamespaceAndPath("minecraft", "oak_planks");
     private Identifier woodType = DEFAULT_WOOD;
 

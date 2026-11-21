@@ -1,6 +1,6 @@
 package atom.dynamicwood.mixin;
 
-import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.entity.DynamicWoodHolder;
 import atom.dynamicwood.block.properties.DynamicWoodProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -38,7 +38,7 @@ public class FireBlockMixin {
             return;
         }
         BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof DynamicWoodBlockEntity dynamicBe && dynamicBe.isFireproof()) {
+        if (be instanceof DynamicWoodHolder dynamicBe && dynamicBe.isFireproof()) {
             ci.cancel();
         }
     }

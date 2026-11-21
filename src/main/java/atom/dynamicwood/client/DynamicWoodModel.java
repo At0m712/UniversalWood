@@ -2,6 +2,7 @@ package atom.dynamicwood.client;
 
 import atom.dynamicwood.DynamicWoodMod;
 import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.entity.DynamicWoodHolder;
 import atom.dynamicwood.component.ModDataComponents;
 import com.google.common.base.Suppliers;
 import com.mojang.math.OctahedralGroup;
@@ -40,6 +41,7 @@ import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.AtlasIds;
 import net.minecraft.resources.Identifier;
@@ -49,6 +51,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.BlockItemStateProperties;
+import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LadderBlock;
@@ -74,10 +78,11 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
     public enum FurnitureType {
         CRAFTING_TABLE,
         BOOKSHELF,
-        LADDER
+        LADDER,
+        BEEHIVE
     }
 
-    public record ModelCacheKey(Identifier woodId, Direction facing) {
+    public record ModelCacheKey(Identifier woodId, Direction facing, boolean honey) {
     }
 
     public record CachedModelData(
@@ -146,17 +151,23 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
 
     private final FurnitureType furnitureType;
     private final @Nullable Direction blockFacing;
+    private final boolean blockHoney;
     private final ConcurrentHashMap<ModelCacheKey, CachedModelData> cache = new ConcurrentHashMap<>();
     private @Nullable ModelRenderProperties itemRenderProperties;
     private @Nullable Matrix4fc itemTransformation;
 
     public DynamicWoodModel(FurnitureType furnitureType) {
-        this(furnitureType, null);
+        this(furnitureType, null, false);
     }
 
     public DynamicWoodModel(FurnitureType furnitureType, @Nullable Direction blockFacing) {
+        this(furnitureType, blockFacing, false);
+    }
+
+    public DynamicWoodModel(FurnitureType furnitureType, @Nullable Direction blockFacing, boolean blockHoney) {
         this.furnitureType = furnitureType;
         this.blockFacing = blockFacing;
+        this.blockHoney = blockHoney;
         REGISTERED_MODELS.add(this);
     }
 
@@ -202,16 +213,166 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
     public CachedModelData getOrBuildModelData(ModelCacheKey key) {
         Identifier safeWoodId = (key.woodId() != null) ? key.woodId() : DynamicWoodBlockEntity.DEFAULT_WOOD;
         Direction safeFacing = (key.facing() != null) ? key.facing() : Direction.NORTH;
-        ModelCacheKey safeKey = new ModelCacheKey(safeWoodId, safeFacing);
+        ModelCacheKey safeKey = new ModelCacheKey(safeWoodId, safeFacing, key.honey());
         return cache.computeIfAbsent(safeKey, this::buildModelData);
     }
 
     private CachedModelData buildModelData(ModelCacheKey key) {
         if (furnitureType == FurnitureType.LADDER) {
             return buildLadderModelData(key.woodId(), key.facing());
+        } else if (furnitureType == FurnitureType.BEEHIVE) {
+            return buildBeehiveModelData(key.woodId(), key.facing(), key.honey());
         } else {
             return buildCubeModelData(key.woodId());
         }
+    }
+
+    private CachedModelData buildBeehiveModelData(Identifier woodId, Direction facing, boolean honey) {
+        TextureAtlas atlas = getBlockAtlas();
+        TextureAtlasSprite plankSprite = resolvePlankSprite(woodId);
+        Material.Baked particleMat = new Material.Baked(plankSprite, false);
+
+        TextureAtlasSprite endSprite = (atlas != null)
+                ? resolveAtlasSprite(atlas,
+                        Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "block/beehive_end_base"),
+                        Identifier.fromNamespaceAndPath("minecraft", "block/beehive_end"))
+                : null;
+        TextureAtlasSprite sideSprite = (atlas != null)
+                ? resolveAtlasSprite(atlas,
+                        Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "block/beehive_side_base"),
+                        Identifier.fromNamespaceAndPath("minecraft", "block/beehive_side"))
+                : null;
+        TextureAtlasSprite frontSprite = (atlas != null)
+                ? resolveAtlasSprite(atlas,
+                        Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "block/beehive_front_base"),
+                        Identifier.fromNamespaceAndPath("minecraft", "block/beehive_front"))
+                : null;
+        TextureAtlasSprite honeyOverlaySprite = (honey && atlas != null)
+                ? resolveAtlasSprite(atlas,
+                        Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "block/beehive_front_honey_overlay"),
+                        null)
+                : null;
+
+        if (!isValidSprite(endSprite)) endSprite = plankSprite;
+        if (!isValidSprite(sideSprite)) sideSprite = plankSprite;
+        if (!isValidSprite(frontSprite)) frontSprite = plankSprite;
+
+        Map<Direction, List<BakedQuad>> culledQuads = new EnumMap<>(Direction.class);
+        for (Direction dir : Direction.values()) {
+            culledQuads.put(dir, new ArrayList<>());
+        }
+        List<BakedQuad> unculledQuads = new ArrayList<>();
+        List<BakedQuad> allQuads = new ArrayList<>();
+
+        ModelBaker.Interner interner = new ModelBaker.Interner() {
+            @Override
+            public Vector3fc vector(Vector3fc v) {
+                return v;
+            }
+
+            @Override
+            public BakedQuad.MaterialInfo materialInfo(BakedQuad.MaterialInfo m) {
+                return m;
+            }
+        };
+
+        CuboidFace.UVs fullUvs = new CuboidFace.UVs(0, 0, 16, 16);
+        Quadrant rot = Quadrant.R0;
+        ModelState modelState = BlockModelRotation.IDENTITY;
+
+        for (Direction dir : Direction.values()) {
+            TextureAtlasSprite baseSprite;
+            if (dir == Direction.UP || dir == Direction.DOWN) {
+                baseSprite = endSprite;
+            } else if (dir == facing) {
+                baseSprite = frontSprite;
+            } else {
+                baseSprite = sideSprite;
+            }
+
+            boolean hasHoneyOverlay = honey && dir == facing && isValidSprite(honeyOverlaySprite);
+            if (!hasHoneyOverlay) {
+                Vector3f from = new Vector3f(0, 0, 0);
+                Vector3f to = new Vector3f(16, 16, 16);
+
+                BakedQuad.MaterialInfo matInfo = new BakedQuad.MaterialInfo(
+                        baseSprite,
+                        ChunkSectionLayer.SOLID,
+                        Sheets.cutoutBlockItemSheet(),
+                        0,
+                        true,
+                        0
+                );
+
+                BakedQuad quad = FaceBakery.bakeQuad(interner, from, to, fullUvs, rot, matInfo, dir, modelState, null);
+                culledQuads.get(dir).add(quad);
+                allQuads.add(quad);
+            } else {
+                Vector3f baseFrom = new Vector3f(0, 0, 0);
+                Vector3f baseTo = new Vector3f(16, 16, 16);
+                switch (dir) {
+                    case NORTH -> baseFrom.z = EPSILON;
+                    case SOUTH -> baseTo.z = 16.0f - EPSILON;
+                    case WEST -> baseFrom.x = EPSILON;
+                    case EAST -> baseTo.x = 16.0f - EPSILON;
+                    default -> {}
+                }
+
+                // Layer 1: Tinted beehive front base
+                BakedQuad.MaterialInfo baseMatInfo = new BakedQuad.MaterialInfo(
+                        baseSprite,
+                        ChunkSectionLayer.SOLID,
+                        Sheets.cutoutBlockItemSheet(),
+                        0,
+                        true,
+                        0
+                );
+                BakedQuad baseQuad = FaceBakery.bakeQuad(interner, baseFrom, baseTo, fullUvs, rot, baseMatInfo, dir, modelState, null);
+                culledQuads.get(dir).add(baseQuad);
+                allQuads.add(baseQuad);
+
+                // Layer 2: Untinted golden honey overlay
+                Vector3f overlayFrom = new Vector3f(0, 0, 0);
+                Vector3f overlayTo = new Vector3f(16, 16, 16);
+                BakedQuad.MaterialInfo overlayMatInfo = new BakedQuad.MaterialInfo(
+                        honeyOverlaySprite,
+                        ChunkSectionLayer.CUTOUT,
+                        Sheets.cutoutBlockItemSheet(),
+                        -1,
+                        true,
+                        0
+                );
+                BakedQuad overlayQuad = FaceBakery.bakeQuad(interner, overlayFrom, overlayTo, fullUvs, rot, overlayMatInfo, dir, modelState, null);
+                culledQuads.get(dir).add(overlayQuad);
+                allQuads.add(overlayQuad);
+            }
+        }
+
+        BlockStateModelPart part = new DynamicBlockStateModelPart(culledQuads, unculledQuads, particleMat);
+
+        int tintArgb = WoodColorResolver.getTintArgb(woodId);
+        Mesh mesh = null;
+        try {
+            Renderer renderer = Renderer.get();
+            if (renderer != null) {
+                MutableMesh mutableMesh = renderer.mutableMesh();
+                QuadEmitter emitter = mutableMesh.emitter();
+                for (BakedQuad q : allQuads) {
+                    emitter.fromBakedQuad(q);
+                    emitter.cullFace(q.direction());
+                    if (q.materialInfo().tintIndex() == 0) {
+                        emitter.color(tintArgb, tintArgb, tintArgb, tintArgb);
+                        emitter.tintIndex(-1);
+                    }
+                    emitter.emit();
+                }
+                mesh = mutableMesh.immutableCopy();
+            }
+        } catch (Exception ignored) {
+        }
+
+        Supplier<Vector3fc[]> extents = Suppliers.memoize(() -> CuboidItemModelWrapper.computeExtents(allQuads));
+        return new CachedModelData(mesh, allQuads, part, particleMat, extents);
     }
 
     private ModelState getLadderRotation(Direction facing) {
@@ -876,13 +1037,13 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
     @Override
     public void collectParts(RandomSource random, List<BlockStateModelPart> outParts) {
         Direction facing = (blockFacing != null) ? blockFacing : Direction.NORTH;
-        outParts.add(getOrBuildModelData(new ModelCacheKey(DynamicWoodBlockEntity.DEFAULT_WOOD, facing)).part());
+        outParts.add(getOrBuildModelData(new ModelCacheKey(DynamicWoodBlockEntity.DEFAULT_WOOD, facing, blockHoney)).part());
     }
 
     @Override
     public Material.Baked particleMaterial() {
         Direction facing = (blockFacing != null) ? blockFacing : Direction.NORTH;
-        return getOrBuildModelData(new ModelCacheKey(DynamicWoodBlockEntity.DEFAULT_WOOD, facing)).particleMaterial();
+        return getOrBuildModelData(new ModelCacheKey(DynamicWoodBlockEntity.DEFAULT_WOOD, facing, blockHoney)).particleMaterial();
     }
 
     @Override
@@ -901,8 +1062,8 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
                 woodId = id;
             } else {
                 BlockEntity be = level.getBlockEntity(pos);
-                if (be instanceof DynamicWoodBlockEntity dynamicBe) {
-                    woodId = dynamicBe.getWoodType();
+                if (be instanceof DynamicWoodHolder holder) {
+                    woodId = holder.getWoodType();
                 }
             }
         }
@@ -911,18 +1072,26 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
             Minecraft client = Minecraft.getInstance();
             if (client != null && client.level != null) {
                 BlockEntity be = client.level.getBlockEntity(pos);
-                if (be instanceof DynamicWoodBlockEntity dynamicBe) {
-                    woodId = dynamicBe.getWoodType();
+                if (be instanceof DynamicWoodHolder holder) {
+                    woodId = holder.getWoodType();
                 }
             }
         }
 
         Direction facing = (blockFacing != null) ? blockFacing : Direction.NORTH;
+        boolean honey = blockHoney;
         if (furnitureType == FurnitureType.LADDER && state != null && state.hasProperty(LadderBlock.FACING)) {
             facing = state.getValue(LadderBlock.FACING);
+        } else if (furnitureType == FurnitureType.BEEHIVE && state != null) {
+            if (state.hasProperty(BeehiveBlock.FACING)) {
+                facing = state.getValue(BeehiveBlock.FACING);
+            }
+            if (state.hasProperty(BeehiveBlock.HONEY_LEVEL)) {
+                honey = state.getValue(BeehiveBlock.HONEY_LEVEL) >= BeehiveBlock.MAX_HONEY_LEVELS;
+            }
         }
 
-        CachedModelData data = getOrBuildModelData(new ModelCacheKey(woodId, facing));
+        CachedModelData data = getOrBuildModelData(new ModelCacheKey(woodId, facing, honey));
         if (data.mesh() != null) {
             data.mesh().outputTo(emitter);
         } else {
@@ -939,12 +1108,30 @@ public class DynamicWoodModel implements BlockStateModel, FabricBlockStateModel,
             woodId = DynamicWoodBlockEntity.DEFAULT_WOOD;
         }
 
+        boolean honey = false;
+        if (furnitureType == FurnitureType.BEEHIVE) {
+            BlockItemStateProperties stateProps = stack.get(DataComponents.BLOCK_STATE);
+            if (stateProps != null) {
+                Integer honeyVal = stateProps.get(BeehiveBlock.HONEY_LEVEL);
+                if (honeyVal != null && honeyVal >= BeehiveBlock.MAX_HONEY_LEVELS) {
+                    honey = true;
+                }
+            }
+        }
+
         renderState.appendModelIdentityElement(this);
         renderState.appendModelIdentityElement(woodId);
+        if (honey) {
+            renderState.appendModelIdentityElement(Boolean.TRUE);
+        }
 
-        CachedModelData data = getOrBuildModelData(new ModelCacheKey(woodId, Direction.NORTH));
+        CachedModelData data = getOrBuildModelData(new ModelCacheKey(woodId, Direction.NORTH, honey));
 
         ItemStackRenderState.LayerRenderState layer = renderState.newLayer();
+
+        if (furnitureType == FurnitureType.BEEHIVE) {
+            layer.tintLayers().add(WoodColorResolver.getTintArgb(woodId));
+        }
 
         if (stack.hasFoil()) {
             ItemStackRenderState.FoilType foilType = ItemStackRenderState.FoilType.STANDARD;

@@ -1,15 +1,25 @@
 package atom.dynamicwood.client;
 
 import atom.dynamicwood.DynamicWoodMod;
+import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.entity.DynamicWoodHolder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.client.color.block.BlockTintSource;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.List;
 import java.util.Map;
 
 public class DynamicWoodClient implements ClientModInitializer {
@@ -24,9 +34,51 @@ public class DynamicWoodClient implements ClientModInitializer {
     );
     public static final DynamicWoodModel LADDER_ITEM_MODEL = new DynamicWoodModel(DynamicWoodModel.FurnitureType.LADDER, Direction.NORTH);
 
+    public static final Map<Direction, DynamicWoodModel> BEEHIVE_BLOCK_MODELS = Map.of(
+            Direction.NORTH, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.NORTH, false),
+            Direction.EAST, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.EAST, false),
+            Direction.SOUTH, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.SOUTH, false),
+            Direction.WEST, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.WEST, false)
+    );
+    public static final Map<Direction, DynamicWoodModel> BEEHIVE_HONEY_BLOCK_MODELS = Map.of(
+            Direction.NORTH, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.NORTH, true),
+            Direction.EAST, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.EAST, true),
+            Direction.SOUTH, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.SOUTH, true),
+            Direction.WEST, new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.WEST, true)
+    );
+    public static final DynamicWoodModel BEEHIVE_ITEM_MODEL = new DynamicWoodModel(DynamicWoodModel.FurnitureType.BEEHIVE, Direction.NORTH, false);
+
+    public static final DynamicChestItemModel CHEST_ITEM_MODEL = new DynamicChestItemModel();
+
     @Override
     public void onInitializeClient() {
         DynamicWoodMod.LOGGER.info("[UniversalWood] Initializing client renderer and model loading plugins...");
+
+        BlockEntityRenderers.register(DynamicWoodMod.CHEST_BLOCK_ENTITY_TYPE, DynamicChestRenderer::new);
+
+        BlockColorRegistry.register(List.of(new BlockTintSource() {
+            @Override
+            public int color(BlockState state) {
+                return WoodColorResolver.getTintArgb(DynamicWoodBlockEntity.DEFAULT_WOOD);
+            }
+
+            @Override
+            public int colorInWorld(BlockState state, BlockAndTintGetter world, BlockPos pos) {
+                Identifier woodId = DynamicWoodBlockEntity.DEFAULT_WOOD;
+                if (world != null && pos != null) {
+                    Object renderData = world.getBlockEntityRenderData(pos);
+                    if (renderData instanceof Identifier id) {
+                        woodId = id;
+                    } else {
+                        BlockEntity be = world.getBlockEntity(pos);
+                        if (be instanceof DynamicWoodHolder holder) {
+                            woodId = holder.getWoodType();
+                        }
+                    }
+                }
+                return WoodColorResolver.getTintArgb(woodId);
+            }
+        }), DynamicWoodMod.BEEHIVE);
 
         ModelLoadingPlugin.register(pluginContext -> {
             pluginContext.modifyBlockModelAfterBake().register((model, context) -> {
@@ -41,6 +93,13 @@ public class DynamicWoodClient implements ClientModInitializer {
                     if (state.is(DynamicWoodMod.LADDER)) {
                         Direction facing = state.hasProperty(LadderBlock.FACING) ? state.getValue(LadderBlock.FACING) : Direction.NORTH;
                         return LADDER_BLOCK_MODELS.getOrDefault(facing, LADDER_ITEM_MODEL);
+                    }
+                    if (state.is(DynamicWoodMod.BEEHIVE)) {
+                        Direction facing = state.hasProperty(BeehiveBlock.FACING) ? state.getValue(BeehiveBlock.FACING) : Direction.NORTH;
+                        boolean honey = state.hasProperty(BeehiveBlock.HONEY_LEVEL) && state.getValue(BeehiveBlock.HONEY_LEVEL) >= BeehiveBlock.MAX_HONEY_LEVELS;
+                        return honey
+                                ? BEEHIVE_HONEY_BLOCK_MODELS.getOrDefault(facing, BEEHIVE_ITEM_MODEL)
+                                : BEEHIVE_BLOCK_MODELS.getOrDefault(facing, BEEHIVE_ITEM_MODEL);
                     }
                 }
                 return model;
@@ -63,6 +122,19 @@ public class DynamicWoodClient implements ClientModInitializer {
                             m.setItemPropertiesFrom(model);
                         }
                         return LADDER_ITEM_MODEL;
+                    }
+                    if (id.equals(Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "beehive"))) {
+                        BEEHIVE_ITEM_MODEL.setItemPropertiesFrom(model);
+                        for (DynamicWoodModel m : BEEHIVE_BLOCK_MODELS.values()) {
+                            m.setItemPropertiesFrom(model);
+                        }
+                        for (DynamicWoodModel m : BEEHIVE_HONEY_BLOCK_MODELS.values()) {
+                            m.setItemPropertiesFrom(model);
+                        }
+                        return BEEHIVE_ITEM_MODEL;
+                    }
+                    if (id.equals(Identifier.fromNamespaceAndPath(DynamicWoodMod.MOD_ID, "chest"))) {
+                        return CHEST_ITEM_MODEL;
                     }
                 }
                 return model;

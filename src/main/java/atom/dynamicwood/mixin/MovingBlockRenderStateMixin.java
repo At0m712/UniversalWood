@@ -1,6 +1,6 @@
 package atom.dynamicwood.mixin;
 
-import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
+import atom.dynamicwood.block.entity.DynamicWoodHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.MovingBlockRenderState;
 import net.minecraft.core.BlockPos;
@@ -23,7 +23,7 @@ public class MovingBlockRenderStateMixin {
             BlockPos targetPos = (pos != null) ? pos : this.blockPos;
             if (targetPos != null) {
                 BlockEntity be = client.level.getBlockEntity(targetPos);
-                if (be instanceof DynamicWoodBlockEntity) {
+                if (be instanceof DynamicWoodHolder) {
                     cir.setReturnValue(be);
                 }
             }

@@ -1,8 +1,12 @@
 package atom.dynamicwood;
 
+import atom.dynamicwood.block.DynamicBeehiveBlock;
 import atom.dynamicwood.block.DynamicBookshelfBlock;
+import atom.dynamicwood.block.DynamicChestBlock;
 import atom.dynamicwood.block.DynamicCraftingTableBlock;
 import atom.dynamicwood.block.DynamicLadderBlock;
+import atom.dynamicwood.block.entity.DynamicBeehiveBlockEntity;
+import atom.dynamicwood.block.entity.DynamicChestBlockEntity;
 import atom.dynamicwood.block.entity.DynamicWoodBlockEntity;
 import atom.dynamicwood.component.ModDataComponents;
 import atom.dynamicwood.item.DynamicWoodBlockItem;
@@ -10,6 +14,7 @@ import atom.dynamicwood.item.DynamicWoodItemGroups;
 import atom.dynamicwood.recipe.DynamicWoodCraftingRecipe;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
+import net.fabricmc.fabric.api.object.builder.v1.world.poi.PoiHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -55,6 +60,24 @@ public class DynamicWoodMod implements ModInitializer {
             Identifier.fromNamespaceAndPath(MOD_ID, "ladder")
     );
 
+    public static final ResourceKey<Block> CHEST_BLOCK_KEY = ResourceKey.create(
+            Registries.BLOCK,
+            Identifier.fromNamespaceAndPath(MOD_ID, "chest")
+    );
+    public static final ResourceKey<Item> CHEST_ITEM_KEY = ResourceKey.create(
+            Registries.ITEM,
+            Identifier.fromNamespaceAndPath(MOD_ID, "chest")
+    );
+
+    public static final ResourceKey<Block> BEEHIVE_BLOCK_KEY = ResourceKey.create(
+            Registries.BLOCK,
+            Identifier.fromNamespaceAndPath(MOD_ID, "beehive")
+    );
+    public static final ResourceKey<Item> BEEHIVE_ITEM_KEY = ResourceKey.create(
+            Registries.ITEM,
+            Identifier.fromNamespaceAndPath(MOD_ID, "beehive")
+    );
+
     public static final DynamicCraftingTableBlock CRAFTING_TABLE = Registry.register(
             BuiltInRegistries.BLOCK,
             CRAFTING_TABLE_BLOCK_KEY,
@@ -79,6 +102,24 @@ public class DynamicWoodMod implements ModInitializer {
             new DynamicLadderBlock(
                     BlockBehaviour.Properties.ofFullCopy(Blocks.LADDER)
                             .setId(LADDER_BLOCK_KEY)
+            )
+    );
+
+    public static final DynamicChestBlock CHEST = Registry.register(
+            BuiltInRegistries.BLOCK,
+            CHEST_BLOCK_KEY,
+            new DynamicChestBlock(
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.CHEST)
+                            .setId(CHEST_BLOCK_KEY)
+            )
+    );
+
+    public static final DynamicBeehiveBlock BEEHIVE = Registry.register(
+            BuiltInRegistries.BLOCK,
+            BEEHIVE_BLOCK_KEY,
+            new DynamicBeehiveBlock(
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.BEEHIVE)
+                            .setId(BEEHIVE_BLOCK_KEY)
             )
     );
 
@@ -109,11 +150,55 @@ public class DynamicWoodMod implements ModInitializer {
             )
     );
 
+    public static final DynamicWoodBlockItem CHEST_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            CHEST_ITEM_KEY,
+            new DynamicWoodBlockItem(
+                    CHEST,
+                    new Item.Properties().setId(CHEST_ITEM_KEY)
+            )
+    );
+
+    public static final DynamicWoodBlockItem BEEHIVE_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            BEEHIVE_ITEM_KEY,
+            new DynamicWoodBlockItem(
+                    BEEHIVE,
+                    new Item.Properties().setId(BEEHIVE_ITEM_KEY)
+            )
+    );
+
     public static final BlockEntityType<DynamicWoodBlockEntity> WOOD_BLOCK_ENTITY_TYPE = Registry.register(
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(MOD_ID, "dynamic_wood"),
             FabricBlockEntityTypeBuilder.create(DynamicWoodBlockEntity::new, CRAFTING_TABLE, BOOKSHELF, LADDER).build()
     );
+
+    public static final BlockEntityType<DynamicChestBlockEntity> CHEST_BLOCK_ENTITY_TYPE = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(MOD_ID, "dynamic_chest"),
+            FabricBlockEntityTypeBuilder.create(DynamicChestBlockEntity::new, CHEST).build()
+    );
+
+    public static final BlockEntityType<DynamicBeehiveBlockEntity> BEEHIVE_BLOCK_ENTITY_TYPE = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(MOD_ID, "dynamic_beehive"),
+            FabricBlockEntityTypeBuilder.create(DynamicBeehiveBlockEntity::new, BEEHIVE).build()
+    );
+
+    public static boolean isOak(@Nullable Identifier woodId) {
+        if (woodId == null) {
+            return true;
+        }
+        if (woodId.equals(DynamicWoodBlockEntity.DEFAULT_WOOD)) {
+            return true;
+        }
+        String path = woodId.getPath();
+        if (path.startsWith("block/")) {
+            path = path.substring(6);
+        }
+        return woodId.getNamespace().equals("minecraft") && path.equals("oak_planks");
+    }
 
     public static boolean isFireproofWood(@Nullable Identifier woodId) {
         if (woodId == null) {
@@ -149,6 +234,9 @@ public class DynamicWoodMod implements ModInitializer {
         net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(CRAFTING_TABLE, 5, 20);
         net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(BOOKSHELF, 30, 20);
         net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(LADDER, 15, 60);
+        net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(BEEHIVE, 5, 20);
+
+        PoiHelper.register(Identifier.fromNamespaceAndPath(MOD_ID, "beehive"), 0, 1, BEEHIVE);
 
         LOGGER.info("[UniversalWood] Successfully initialized!");
     }
