@@ -156,6 +156,16 @@ public class DynamicChestBlock extends ChestBlock {
         if (woodId != null && level.getBlockEntity(pos) instanceof DynamicChestBlockEntity be) {
             be.setWoodType(woodId);
         }
+        if (state.getValue(TYPE) != ChestType.SINGLE) {
+            Direction connectedDir = getConnectedDirection(state);
+            BlockPos partnerPos = pos.relative(connectedDir);
+            BlockState partnerState = level.getBlockState(partnerPos);
+            if (partnerState.is(this)
+                    && partnerState.getValue(TYPE) == ChestType.SINGLE
+                    && partnerState.getValue(FACING) == state.getValue(FACING)) {
+                level.setBlock(partnerPos, partnerState.setValue(TYPE, state.getValue(TYPE).getOpposite()), Block.UPDATE_ALL);
+            }
+        }
     }
 
     @Override

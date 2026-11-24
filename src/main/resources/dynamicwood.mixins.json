@@ -3,6 +3,7 @@
   "package": "atom.dynamicwood.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "BeeMixin",
     "BlockBehaviourBlockStateBaseMixin",
     "FireBlockMixin"
   ],
